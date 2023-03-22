@@ -1,0 +1,5 @@
+- hosts: localhost
+  connection: local
+  tasks:
+    - ansible.builtin.debug:
+        msg: "ConfigMap in namespace '{{ event.resource.metadata.namespace }}' with name '{{ event.resource.metadata.name }} ‘{{ event.type | capitalize }}’ with the message ‘{{ event.resource.data.message}}'"
