@@ -9,6 +9,5 @@
     - name: Execute Playbook
       condition: event.type == "ADDED"
       action:
-        debug:
-        #run_playbook:
-          #name: k8s-configmap-info.yaml
+        run_playbook:
+          name: k8s-configmap-info.yaml
