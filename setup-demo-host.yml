@@ -1,0 +1,77 @@
+---
+- name: Setup EDA demo host
+  hosts: all
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Set a hostname
+      ansible.builtin.hostname:
+        name: eda-demo
+
+    - name: Install packages
+      ansible.builtin.yum:
+        name:
+          - python3-pip
+          - git-core
+          - vim-enhanced
+          - java-17-openjdk
+          - httpd
+          - firewalld
+
+    - name: firewalld allow ssh
+      ansible.builtin.firewalld:
+        port: 2222/tcp
+        permanent: true
+        state: enabled
+
+    - name: Start firewalld service
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: Webserver home
+      ansible.builtin.copy:
+        content: "EDA demo 1.2.3"
+        dest: /var/www/html/index.html
+
+    - name: Start webserver
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: true
+
+    - name: Download oc and kubectl client
+      ansible.builtin.unarchive:
+        src: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/openshift-client-linux.tar.gz
+        dest: "/usr/local/bin"
+        remote_src: yes
+
+- name: Setup EDA
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Install Ansible and deps
+      ansible.builtin.pip:
+        name:
+          - ansible
+          - ansible-rulebook
+          - kubernetes
+          - oauthlib==3.2.0
+
+    - name: Install ansible.eda collection
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection install ansible.eda
+        creates: "$HOME/.ansible/collections/ansible_collections/ansible.eda*"
+
+    - name: Install sabre1041.eda collection
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection install sabre1041.eda
+        creates: "$HOME/.ansible/collections/ansible_collections/sabre1041.eda*"
+
+    - name: Git checkout
+      ansible.builtin.git:
+        repo: "https://github.com/jwennerberg/event-driven-ansible-demo.git"
+        dest: "$HOME/eda-demo"
+
